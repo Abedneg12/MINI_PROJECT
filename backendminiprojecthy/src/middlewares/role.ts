@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { UserRole } from '@prisma/client';
+import { AuthRequest } from './auth';
 
 export function roleMiddleware(...allowedRoles: UserRole[]) {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
     const user = req.user;
 
     if (!user || !allowedRoles.includes(user.role)) {
@@ -10,9 +11,9 @@ export function roleMiddleware(...allowedRoles: UserRole[]) {
         success: false,
         message: 'Forbidden: Role tidak diizinkan',
       });
-      return; // ← tambahkan return agar function tidak lanjut ke `next()`
+      return;
     }
 
-    next(); // lanjut ke handler berikutnya
+    next();
   };
 }

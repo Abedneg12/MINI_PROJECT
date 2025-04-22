@@ -3,6 +3,7 @@ import { PORT } from "./config"
 import RegisterRouter from "./routers/register.router";
 import LoginRouter from "./routers/login.router";
 import profileRouter from './routers/profile.router';
+import DashboardRouter from './routers/dashboard.router'; // Import DashboardRouter
 import cors from 'cors';
 
 
@@ -30,7 +31,7 @@ app.get(
 app.use("/auth", RegisterRouter)
 app.use("/auth",LoginRouter)
 app.use('/profile', profileRouter);
-
+app.use('/organizer', DashboardRouter);
 
 // Jalankan server
 app.listen(port, () => {

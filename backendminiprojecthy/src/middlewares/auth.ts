@@ -2,9 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { IUserPayload } from '../interfaces/interfaces';
 
+// Secret key JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+// Custom interface untuk request
+export interface AuthRequest extends Request {
+  user?: IUserPayload;
+}
+
+// Middleware untuk verifikasi JWT token
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,8 +26,8 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as IUserPayload;
-    req.user = decoded;
-    next(); // <--- ini wajib dipanggil kalau berhasil
+    req.user = decoded; // ✅ sekarang aman, karena pakai AuthRequest
+    next();
   } catch (err) {
     res.status(401).json({
       success: false,

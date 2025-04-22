@@ -30,6 +30,10 @@ export interface IUpdateProfileInput {
   profile_picture?: string; // bisa jadi URL atau file, tergantung implementasi
 }
 
+export interface AuthRequest extends Request {
+  user?: IUserPayload;
+}
+
 export interface IUserPayload {
   id: number;
   email: string;
