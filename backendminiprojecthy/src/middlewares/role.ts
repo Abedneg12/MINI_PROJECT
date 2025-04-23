@@ -13,7 +13,6 @@ export function roleMiddleware(...allowedRoles: UserRole[]) {
       });
       return;
     }
-
     next();
   };
 }

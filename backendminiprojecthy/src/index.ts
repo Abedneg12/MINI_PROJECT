@@ -5,7 +5,7 @@ import LoginRouter from "./routers/login.router";
 import profileRouter from './routers/profile.router';
 import DashboardRouter from './routers/dashboard.router'; // Import DashboardRouter
 import cors from 'cors';
-
+import EventRouter from './routers/event.router';
 
 const port = PORT || 5000;
 const app: Application = express();
@@ -28,10 +28,18 @@ app.get(
   }
 );
 
+
+
+
 app.use("/auth", RegisterRouter)
 app.use("/auth",LoginRouter)
 app.use('/profile', profileRouter);
 app.use('/organizer', DashboardRouter);
+app.use('/events', EventRouter);
+
+
+
+
 
 // Jalankan server
 app.listen(port, () => {

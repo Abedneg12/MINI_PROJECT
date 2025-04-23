@@ -1,20 +1,27 @@
 import { Request, Response } from 'express';
 import { getMyProfile, updateMyProfile } from '../services/profile.service';
+import { successResponse, errorResponse } from '../utils.ts/response';
 
-export const getMyProfileController = async (req: Request, res: Response) => {
+export const getMyProfileController = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const user = await getMyProfile(req.user!.id);
-    res.status(200).json({ success: true, data: user });
+    successResponse(res, user, 'Data profil berhasil diambil');
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    errorResponse(res, err.message || 'Gagal mengambil profil', 500);
   }
 };
 
-export const updateMyProfileController = async (req: Request, res: Response) => {
+export const updateMyProfileController = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const updatedUser = await updateMyProfile(req.user!.id, req.body);
-    res.status(200).json({ success: true, message: 'Profile updated', data: updatedUser });
+    successResponse(res, updatedUser, 'Profil berhasil diperbarui');
   } catch (err: any) {
-    res.status(500).json({ success: false, message: err.message });
+    errorResponse(res, err.message || 'Gagal memperbarui profil', 500);
   }
 };

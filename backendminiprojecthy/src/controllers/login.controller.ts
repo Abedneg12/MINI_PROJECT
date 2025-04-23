@@ -1,19 +1,17 @@
 import { Request, Response } from 'express';
 import { LoginService } from '../services/login.service';
+import { successResponse, errorResponse } from '../utils.ts/response';
 
-export const LoginController = async (req: Request, res: Response) => {
+export const LoginController = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await LoginService(req.body);
-    res.status(200).json({
-      success: true,
-      message: result.message,
-      token: result.token, // ← ini penting
-      data: result.user,
-    });
+
+    successResponse(res, {
+      token: result.token,
+      user: result.user,
+    }, result.message);
+    
   } catch (error: any) {
-    res.status(401).json({
-      success: false,
-      message: error.message || 'Login gagal',
-    });
+    errorResponse(res, error.message || 'Login gagal', 401);
   }
 };
