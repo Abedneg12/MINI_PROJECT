@@ -2,93 +2,91 @@ import { PrismaClient } from '@prisma/client';
 import { IRegisterInput } from '../interfaces/interfaces';
 import bcrypt from 'bcrypt';
 
-
 const prisma = new PrismaClient();
 
 export const RegisterService = async (input: IRegisterInput) => {
   const { full_name, email, password, role, referral_code } = input;
 
-  // 1. Cek apakah email sudah terdaftar
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new Error('Email sudah terdaftar');
   }
 
-  // 2. Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  // 3. Generate referral code unik
   const nameCode = full_name.split(' ')[0].toUpperCase();
   const newReferralCode = `REF-${nameCode}-${Date.now().toString().slice(-4)}`;
 
-  // 4. Siapkan objek data user baru
-  const newUserData: any = {
-    full_name,
-    email,
-    password: hashedPassword,
-    role,
-    referral_code: newReferralCode,
-  };
+  const result = await prisma.$transaction(async (tx) => {
+    // 1. Jika referral digunakan, cek validitas
+    let referrer = null;
+    if (referral_code) {
+      referrer = await tx.user.findFirst({
+        where: { referral_code: referral_code },
+      });
 
-  // 5. Jika user mendaftar pakai referral code:
-  let referrer = null;
-  if (referral_code) {
-    referrer = await prisma.user.findFirst({
-      where: { referral_code: referral_code },
-    });
-
-    if (!referrer) {
-      throw new Error('Kode referral tidak ditemukan');
+      if (!referrer) {
+        throw new Error('Kode referral tidak ditemukan');
+      }
     }
-  }
 
-  // 6. Buat user baru dulu
-  const newUser = await prisma.user.create({ data: newUserData });
-
-  // 7. Jika referral valid → berikan reward
-  if (referrer) {
-    const now = new Date();
-    const threeMonthsLater = new Date();
-    threeMonthsLater.setMonth(now.getMonth() + 3);
-
-    // 7.1. Tambah poin ke referrer
-    await prisma.point.create({
+    // 2. Buat user baru
+    const newUser = await tx.user.create({
       data: {
-        user_id: referrer.id,
-        amount: 10000,
-        source: 'REFERRAL',
-        expired_at: threeMonthsLater,
+        full_name,
+        email,
+        password: hashedPassword,
+        role,
+        referral_code: newReferralCode,
       },
     });
 
-    // 7.2. Tambah kupon ke user baru
-    await prisma.coupon.create({
-      data: {
-        user_id: newUser.id,
-        code: `COUPON-${Date.now().toString().slice(-5)}`,
-        discount_amount: 10000,
-        expired_at: threeMonthsLater,
-        is_used: false,
-      },
-    });
+    // 3. Kalau referral valid → beri reward
+    if (referrer) {
+      const now = new Date();
+      const expired = new Date(now);
+      expired.setMonth(now.getMonth() + 3);
 
-    // 7.3. Tambah ReferralLog
-    await prisma.referralLog.create({
-      data: {
-        referred_by_id: referrer.id,
-        referral_used_id: newUser.id,
-      },
-    });
-  }
+      // 3.1. Buat poin
+      await tx.point.create({
+        data: {
+          user_id: referrer.id,
+          amount: 10000,
+          source: 'REFERRAL',
+          expired_at: expired,
+        },
+      });
 
-  return {
-    message: 'Registrasi berhasil',
-    user: {
+      // 3.2. Buat kupon
+      await tx.coupon.create({
+        data: {
+          user_id: newUser.id,
+          code: `COUPON-${Date.now().toString().slice(-5)}`,
+          discount_amount: 10000,
+          expired_at: expired,
+          is_used: false,
+        },
+      });
+
+      // 3.3. Buat log referral
+      await tx.referralLog.create({
+        data: {
+          referred_by_id: referrer.id,
+          referral_used_id: newUser.id,
+        },
+      });
+    }
+
+    return {
       id: newUser.id,
       full_name: newUser.full_name,
       email: newUser.email,
       role: newUser.role,
       referral_code: newUser.referral_code,
-    },
+    };
+  });
+
+  return {
+    message: 'Registrasi berhasil',
+    user: result,
   };
 };
