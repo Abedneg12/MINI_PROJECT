@@ -35,6 +35,7 @@ model User {
   role            UserRole
   referral_code   String   @unique
   profile_picture String?
+  is_verified     Boolean  @default(false)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 

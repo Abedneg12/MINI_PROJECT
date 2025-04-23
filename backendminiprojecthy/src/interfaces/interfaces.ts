@@ -4,6 +4,7 @@ export interface IRegisterInput {
   password: string;
   role: 'CUSTOMER' | 'ORGANIZER';
   referral_code?: string;
+  is_verified: boolean;
 }
 
 export interface ILoginInput {
