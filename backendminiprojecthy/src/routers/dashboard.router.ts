@@ -1,6 +1,6 @@
 import express from 'express';
 import { authMiddleware } from '../middlewares/auth';
-import { organizerOnly } from '../middlewares/rolecheck';
+import { organizerOnly } from '../middlewares/roleCheck';
 import { AuthRequest } from '../middlewares/auth';
 
 const router = express.Router();
