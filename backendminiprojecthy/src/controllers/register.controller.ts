@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import { RegisterService } from '../services/register.service';
+import { IRegisterInput } from '../interfaces/interfaces';
 
-export const RegisterController = async (req: Request, res: Response) => {
+export const RegisterController = async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await RegisterService(req.body);
+    const input: IRegisterInput = req.body;
+    const result = await RegisterService(input);
     res.status(201).json({
       success: true,
       message: result.message,
@@ -12,7 +14,7 @@ export const RegisterController = async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(400).json({
       success: false,
-      message: error.message || 'Registrasi gagal',
+      message: error.message || 'Terjadi kesalahan saat registrasi',
     });
   }
 };
