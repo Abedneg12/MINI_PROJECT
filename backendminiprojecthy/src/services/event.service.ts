@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { Event } from '@prisma/client';
 import { ICreateEventInput } from '../interfaces/event.interfaces';
 
 
@@ -76,7 +75,7 @@ export const updateEvent = async (
     throw new Error('Event tidak ditemukan atau bukan milik Anda');
   }
 
-  // Update event
+  //5. Update event
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
@@ -88,7 +87,7 @@ export const updateEvent = async (
 };
 
 
-//5. Detele Event
+//6. Detele Event
 export const deleteEvent = async (eventId: number, organizerId: number) => {
   // Cek apakah event dimiliki oleh organizer
   const event = await prisma.event.findUnique({

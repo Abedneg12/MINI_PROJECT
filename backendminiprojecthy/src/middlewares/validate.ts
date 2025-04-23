@@ -13,7 +13,7 @@ export const validate = (schema: AnyZodObject) => {
         errors: error.errors || error.message,
       });
 
-      return; // ✅ Tambahkan return void
+      return; // Tambahkan return
     }
   };
 };
