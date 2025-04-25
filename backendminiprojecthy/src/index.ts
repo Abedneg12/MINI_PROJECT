@@ -1,18 +1,20 @@
 import express, { Application, Request, Response, NextFunction } from "express";
-import { PORT } from "./config"
+import { FE_PORT, PORT } from "./config"
 import RegisterRouter from "./routers/register.router";
 import LoginRouter from "./routers/login.router";
 import profileRouter from './routers/profile.router';
 import DashboardRouter from './routers/dashboard.router'; // Import DashboardRouter
 import cors from 'cors';
 import EventRouter from './routers/event.router';
+import helmet from 'helmet';
 
 const port = PORT || 5000;
 const app: Application = express();
 
+app.use(helmet());
 //middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // frontend kamu
+  origin: FE_PORT, // frontend Local Host
   credentials: true
 }));
 app.use(express.json());
