@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { LoginService } from '../services/login.service';
-import { successResponse, errorResponse } from '../utils.ts/response';
+import { successResponse, errorResponse } from '../utils/response';
 
 export const LoginController = async (req: Request, res: Response): Promise<void> => {
   try {

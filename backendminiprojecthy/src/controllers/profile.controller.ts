@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getMyProfile, updateMyProfile } from '../services/profile.service';
-import { successResponse, errorResponse } from '../utils.ts/response';
+import { successResponse, errorResponse } from '../utils/response';
 
 export const getMyProfileController = async (
   req: Request,

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { RegisterService } from '../services/register.service';
 import { IRegisterInput } from '../interfaces/interfaces';
-import { successResponse, errorResponse } from '../utils.ts/response';
+import { successResponse, errorResponse } from '../utils/response';
 
 export const RegisterController = async (req: Request, res: Response): Promise<void> => {
   try {

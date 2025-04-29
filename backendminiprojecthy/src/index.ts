@@ -1,12 +1,16 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import { FE_PORT, PORT } from "./config"
+import helmet from 'helmet';
+import cors from 'cors';
+
+
 import RegisterRouter from "./routers/register.router";
 import LoginRouter from "./routers/login.router";
 import profileRouter from './routers/profile.router';
 import DashboardRouter from './routers/dashboard.router'; // Import DashboardRouter
-import cors from 'cors';
 import EventRouter from './routers/event.router';
-import helmet from 'helmet';
+import verifyRouter from './routers/verify.router';
+
 
 const port = PORT || 5000;
 const app: Application = express();
@@ -33,8 +37,9 @@ app.get(
 
 
 
-app.use("/auth", RegisterRouter)
-app.use("/auth",LoginRouter)
+app.use("/auth", RegisterRouter);
+app.use("/auth", LoginRouter);
+app.use("/auth", verifyRouter); // ✅ Tambahkan ini
 app.use('/profile', profileRouter);
 app.use('/organizer', DashboardRouter);
 app.use('/events', EventRouter);

@@ -22,7 +22,39 @@ export const getAllEvents = async () => {
   return events;
 };
 
-//2. mengambil event berdasarkan ID
+//2. mengambil event berdasarkan keyword
+export async function searchEvents(keyword: string) {
+  if (!keyword.trim()) {
+    throw new Error('Keyword tidak boleh kosong');
+  }
+
+  const events = await prisma.event.findMany({
+    where: {
+      OR: [
+        { name: { contains: keyword, mode: 'insensitive' } },
+        { description: { contains: keyword, mode: 'insensitive' } },
+        { category: { contains: keyword, mode: 'insensitive' } },
+        { location: { contains: keyword, mode: 'insensitive' } },
+      ],
+    },
+    orderBy: {
+      start_date: 'asc',
+    },
+    include: {
+      organizer: {
+        select: {
+          id: true,
+          full_name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return events;
+}
+
+//3. mengambil event berdasarkan ID
 export const getEventById = async (id: number) => {
   const event = await prisma.event.findUnique({
     where: { id },
@@ -44,7 +76,7 @@ export const getEventById = async (id: number) => {
   return event;
 };
 
-//.3 membuat create event
+//4. membuat create event
 export const createEvent = async (
   input: ICreateEventInput,
   organizer_id: number
@@ -60,7 +92,7 @@ export const createEvent = async (
   return newEvent;
 };
 
-//4. Update event
+//5. Update event
 export const updateEvent = async (
   eventId: number,
   organizerId: number,
@@ -75,7 +107,7 @@ export const updateEvent = async (
     throw new Error('Event tidak ditemukan atau bukan milik Anda');
   }
 
-  //5. Update event
+  //6. Update event
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
@@ -87,7 +119,7 @@ export const updateEvent = async (
 };
 
 
-//6. Detele Event
+//7. Detele Event
 export const deleteEvent = async (eventId: number, organizerId: number) => {
   // Cek apakah event dimiliki oleh organizer
   const event = await prisma.event.findUnique({

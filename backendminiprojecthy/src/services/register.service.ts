@@ -1,8 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { IRegisterInput } from '../interfaces/interfaces';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { sendVerificationEmail } from '../utils/sendVerificationEmail';
 
 const prisma = new PrismaClient();
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecuresecret';
 
 export const RegisterService = async (input: IRegisterInput) => {
   const { full_name, email, password, role, referral_code } = input;
@@ -17,11 +20,11 @@ export const RegisterService = async (input: IRegisterInput) => {
   const newReferralCode = `REF-${nameCode}-${Date.now().toString().slice(-4)}`;
 
   const result = await prisma.$transaction(async (tx) => {
-    // 1. Jika referral digunakan, cek validitas
+    // 1. Validasi referral jika digunakan
     let referrer = null;
     if (referral_code) {
       referrer = await tx.user.findFirst({
-        where: { referral_code: referral_code },
+        where: { referral_code },
       });
 
       if (!referrer) {
@@ -37,16 +40,16 @@ export const RegisterService = async (input: IRegisterInput) => {
         password: hashedPassword,
         role,
         referral_code: newReferralCode,
+        is_verified: false, // ← Penting!
       },
     });
 
-    // 3. Kalau referral valid → beri reward
+    // 3. Jika referral valid, beri reward
     if (referrer) {
       const now = new Date();
-      const expired = new Date(now);
+      const expired = new Date();
       expired.setMonth(now.getMonth() + 3);
 
-      // 3.1. Buat poin
       await tx.point.create({
         data: {
           user_id: referrer.id,
@@ -56,7 +59,6 @@ export const RegisterService = async (input: IRegisterInput) => {
         },
       });
 
-      // 3.2. Buat kupon
       await tx.coupon.create({
         data: {
           user_id: newUser.id,
@@ -67,7 +69,6 @@ export const RegisterService = async (input: IRegisterInput) => {
         },
       });
 
-      // 3.3. Buat log referral
       await tx.referralLog.create({
         data: {
           referred_by_id: referrer.id,
@@ -75,6 +76,17 @@ export const RegisterService = async (input: IRegisterInput) => {
         },
       });
     }
+
+    // 4. Buat token verifikasi
+    const verifyToken = jwt.sign(
+      { id: newUser.id, email: newUser.email },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    // 5. Kirim email verifikasi
+    const verificationLink = `http://localhost:5000/auth/verify?token=${verifyToken}`;
+    await sendVerificationEmail(newUser.email, newUser.full_name, verificationLink);
 
     return {
       id: newUser.id,
@@ -86,7 +98,7 @@ export const RegisterService = async (input: IRegisterInput) => {
   });
 
   return {
-    message: 'Registrasi berhasil',
+    message: 'Registrasi berhasil, silakan cek email untuk verifikasi akun.',
     user: result,
   };
 };
