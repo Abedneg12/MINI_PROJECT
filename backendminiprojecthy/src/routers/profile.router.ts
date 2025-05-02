@@ -1,25 +1,25 @@
 import express from 'express';
 import { authMiddleware } from '../middlewares/auth';
-import { roleMiddleware } from '../middlewares/role'; // ⬅️ import middleware role
+import { roleMiddleware } from '../middlewares/role';
 import {
-  getMyProfileController,
   updateMyProfileController,
+  getCustomerProfileController, // tambahkan import baru
 } from '../controllers/profile.controller';
 
 const router = express.Router();
 
-// 🔒 Hanya CUSTOMER yang bisa akses profil
+// Route 1: Untuk CUSTOMER - Data lengkap profil (poin, kupon, voucher)
 router.get(
-  '/me',
+  '/me/customer',
   authMiddleware,
   roleMiddleware('CUSTOMER'),
-  getMyProfileController
+  getCustomerProfileController
 );
 
+// Route 2: Update data profil
 router.put(
   '/update',
   authMiddleware,
-  roleMiddleware('CUSTOMER'),
   updateMyProfileController
 );
 

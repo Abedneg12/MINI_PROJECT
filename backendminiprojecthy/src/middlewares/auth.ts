@@ -26,7 +26,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as IUserPayload;
-    req.user = decoded; // ✅ sekarang aman, karena pakai AuthRequest
+    req.user = decoded; // sekarang aman, karena pakai AuthRequest
     next();
   } catch (err) {
     res.status(401).json({

@@ -4,19 +4,42 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-export const getMyProfile = async (userId: number) => {
-  return prisma.user.findUnique({
+
+export const getCustomerProfileService = async (userId: number) => {
+  const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      id: true,
-      full_name: true,
-      email: true,
-      role: true,
-      referral_code: true,
-      profile_picture: true,
-      created_at: true,
+    include: {
+      points: true,
+      coupons: {
+        where: { is_used: false },
+      },
+      transactions: {
+        where: {
+          used_voucher_id: {
+            not: null,
+          },
+        },
+        include: {
+          used_voucher: true,
+        },
+      },
     },
   });
+
+  if (!user) {
+    throw new Error('User tidak ditemukan');
+  }
+
+  return {
+    id: user.id,
+    full_name: user.full_name,
+    email: user.email,
+    referral_code: user.referral_code,
+    is_verified: user.is_verified,
+    point: (user.points || []).reduce((acc, curr) => acc + curr.amount, 0),
+    coupons: user.coupons,
+    vouchers: user.transactions.map((tx) => tx.used_voucher),
+  };
 };
 
 export const updateMyProfile = async (userId: number, input: IUpdateProfileInput) => {
