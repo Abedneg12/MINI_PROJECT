@@ -14,8 +14,9 @@ enum UserRole {
 }
 
 enum TransactionStatus {
-  WAITING
-  CONFIRMED
+  WAITING_FOR_PAYMENT
+  WAITING_FOR_ADMIN_CONFIRMATION
+  DONE
   REJECTED
   EXPIRED
   CANCELED
@@ -25,6 +26,13 @@ enum PointSource {
   REFERRAL
   REFUND
   REDEEM
+}
+
+enum EventCategory {
+  FESTIVAL
+  MUSIC
+  ART
+  EDUCATION
 }
 
 model User {
@@ -57,12 +65,12 @@ model ReferralLog {
 }
 
 model Event {
-  id              Int      @id @default(autoincrement())
-  organizer       User     @relation(fields: [organizer_id], references: [id])
+  id              Int           @id @default(autoincrement())
+  organizer       User          @relation(fields: [organizer_id], references: [id])
   organizer_id    Int
   name            String
   description     String
-  category        String
+  category        EventCategory
   location        String
   paid            Boolean
   price           Int
@@ -70,7 +78,7 @@ model Event {
   end_date        DateTime
   total_seats     Int
   remaining_seats Int
-  created_at      DateTime @default(now())
+  created_at      DateTime      @default(now())
 
   vouchers     Voucher[]
   transactions Transaction[]

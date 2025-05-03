@@ -1,7 +1,9 @@
+import { EventCategory } from "@prisma/client";
+
 export interface ICreateEventInput {
   name: string;
   description: string;
-  category: string;
+  category: EventCategory;
   location: string;
   paid: boolean;
   price: number;

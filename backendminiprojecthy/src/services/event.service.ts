@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { ICreateEventInput } from '../interfaces/event.interfaces';
-
+import { EventCategory } from '@prisma/client';
 
 
 const prisma = new PrismaClient();
@@ -28,13 +28,20 @@ export async function searchEvents(keyword: string) {
     throw new Error('Keyword tidak boleh kosong');
   }
 
+  const lowered = keyword.toLowerCase();
+
+  const isCategory = Object.values(EventCategory).some(cat => cat.toLowerCase() === lowered);
+  const categoryFilter = isCategory
+    ? [{ category: keyword.toUpperCase() as EventCategory }]
+    : [];
+
   const events = await prisma.event.findMany({
     where: {
       OR: [
         { name: { contains: keyword, mode: 'insensitive' } },
         { description: { contains: keyword, mode: 'insensitive' } },
-        { category: { contains: keyword, mode: 'insensitive' } },
         { location: { contains: keyword, mode: 'insensitive' } },
+        ...categoryFilter,
       ],
     },
     orderBy: {
@@ -53,6 +60,7 @@ export async function searchEvents(keyword: string) {
 
   return events;
 }
+
 
 //3. mengambil event berdasarkan ID
 export const getEventById = async (id: number) => {
