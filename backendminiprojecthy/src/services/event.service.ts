@@ -130,7 +130,7 @@ export const deleteEvent = async (eventId: number, organizerId: number) => {
     throw new Error('Event tidak ditemukan atau bukan milik Anda');
   }
 
-  // Hapus event
+  // 8. Hapus event
   await prisma.event.delete({
     where: { id: eventId },
   });
