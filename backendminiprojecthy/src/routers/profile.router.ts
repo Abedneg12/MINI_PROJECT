@@ -1,10 +1,11 @@
 import express from 'express';
 import { authMiddleware } from '../middlewares/auth';
 import { roleMiddleware } from '../middlewares/role';
-import {
-  updateMyProfileController,
-  getCustomerProfileController, // tambahkan import baru
-} from '../controllers/profile.controller';
+import { updateMyProfileController, getCustomerProfileController, uploadProfilePictureController} from '../controllers/profile.controller';
+import { upload } from '../utils/multer';
+
+
+
 
 const router = express.Router();
 
@@ -14,6 +15,14 @@ router.get(
   authMiddleware,
   roleMiddleware('CUSTOMER'),
   getCustomerProfileController
+);
+
+router.put(
+  '/customer/upload',
+  authMiddleware,
+  roleMiddleware("CUSTOMER"),
+  upload.single('profile_picture'), // key harus sama dengan form-data
+  uploadProfilePictureController
 );
 
 // Route 2: Update data profil

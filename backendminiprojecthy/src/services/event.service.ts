@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { ICreateEventInput } from '../interfaces/event.interfaces';
+import { ICreateEventInput } from '../interfaces/event.interface';
 import { EventCategory } from '@prisma/client';
 
 
