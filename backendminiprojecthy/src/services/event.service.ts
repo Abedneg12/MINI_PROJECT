@@ -115,7 +115,6 @@ export const updateEvent = async (
     throw new Error('Event tidak ditemukan atau bukan milik Anda');
   }
 
-  //6. Update event
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
@@ -127,7 +126,7 @@ export const updateEvent = async (
 };
 
 
-//7. Detele Event
+//6. Detele Event
 export const deleteEvent = async (eventId: number, organizerId: number) => {
   // Cek apakah event dimiliki oleh organizer
   const event = await prisma.event.findUnique({
