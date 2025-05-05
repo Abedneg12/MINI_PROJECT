@@ -1,15 +1,17 @@
 import express from 'express';
+import {
+  deleteProfilePictureController,
+  getCustomerProfileController,
+  updateMyProfileController,
+  uploadProfilePictureController
+} from '../controllers/profile.controller';
 import { authMiddleware } from '../middlewares/auth';
 import { roleMiddleware } from '../middlewares/role';
-import { updateMyProfileController, getCustomerProfileController, uploadProfilePictureController} from '../controllers/profile.controller';
-import { upload } from '../utils/multer';
-
-
-
+import { Multer } from '../utils/multer';
 
 const router = express.Router();
 
-// Route 1: Untuk CUSTOMER - Data lengkap profil (poin, kupon, voucher)
+// GET Profil Customer
 router.get(
   '/me/customer',
   authMiddleware,
@@ -17,19 +19,29 @@ router.get(
   getCustomerProfileController
 );
 
-router.put(
-  '/customer/upload',
-  authMiddleware,
-  roleMiddleware("CUSTOMER"),
-  upload.single('profile_picture'), // key harus sama dengan form-data
-  uploadProfilePictureController
-);
-
-// Route 2: Update data profil
+// PUT Update Profil Customer
 router.put(
   '/update',
   authMiddleware,
   updateMyProfileController
 );
+
+// PATCH Upload Foto Profil Customer
+router.patch(
+  '/customer/upload-picture',
+  authMiddleware,
+  roleMiddleware('CUSTOMER'),
+  Multer('memoryStorage').single('profile_picture'),
+  uploadProfilePictureController
+);
+
+
+router.patch(
+  '/customer/delete-picture',
+  authMiddleware,
+  roleMiddleware('CUSTOMER'),
+  deleteProfilePictureController
+);
+
 
 export default router;

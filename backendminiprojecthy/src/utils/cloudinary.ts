@@ -1,21 +1,45 @@
-import { v2 as cloudinary } from 'cloudinary';
-import streamifier from 'streamifier';
+// src/utils/cloudinary.ts
+
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import * as streamifier from "streamifier";
+import { CLOUDINARY_NAME, CLOUDINARY_KEY, CLOUDINARY_SECRET } from "../config";
+
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
+  cloud_name: CLOUDINARY_NAME || "",
+  api_key: CLOUDINARY_KEY || "",
+  api_secret: CLOUDINARY_SECRET || "",
 });
-export const uploadToCloudinary = (fileBuffer: Buffer): Promise<{ secure_url: string }> => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: 'profile_pictures' },
-      (error, result) => {
-        if (error || !result) return reject(error);
-        resolve({ secure_url: result.secure_url });
-      }
-    );
 
-    streamifier.createReadStream(fileBuffer).pipe(stream);
+
+export function cloudinaryUpload(file: Express.Multer.File): Promise<UploadApiResponse> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream((err, res: UploadApiResponse) => {
+      if (err) return reject(err);
+      resolve(res);
+    });
+
+    streamifier.createReadStream(file.buffer).pipe(uploadStream);
   });
-};
+}
+
+
+ //Mengekstrak public_id dari secure_url
+ //Misal: https://res.cloudinary.com/xxx/image/upload/v1234567/abcde.jpg -> abcde
+ 
+export function extractPublicIdFromUrl(url: string): string {
+  try {
+    const parts = url.split("/");
+    const publicIdWithExt = parts[parts.length - 1];
+    const publicId = publicIdWithExt.split(".")[0];
+    return publicId;
+  } catch (err) {
+    throw new Error("Gagal mengekstrak public_id dari URL");
+  }
+}
+
+
+export async function cloudinaryRemove(secure_url: string) {
+  const publicId = extractPublicIdFromUrl(secure_url);
+  return await cloudinary.uploader.destroy(publicId);
+}
