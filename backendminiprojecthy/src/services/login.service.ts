@@ -40,6 +40,7 @@ export const LoginService = async (input: ILoginInput) => {
       email: user.email,
       role: user.role,
       referral_code: user.referral_code,
+      profile_picture : user.profile_picture
     },
   };
 };
