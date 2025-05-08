@@ -4,7 +4,7 @@ import {
   getCustomerProfileService,
 } from '../services/profile.service';
 import { successResponse, errorResponse } from '../utils/response';
-import { updateCustomerPictureService } from '../services/updateCustomerPictureService'; // ✅ pakai service baru
+import { updatePictureService } from '../services/updateCustomerPictureService'; // ✅ pakai service baru
 import { AuthRequest } from '../middlewares/auth'; // ✅ tipe request yang punya `req.user`
 import { deleteCustomerPictureService } from '../services/deleteCustomerPictureService';
 
@@ -44,7 +44,7 @@ export const uploadProfilePictureController = async (
       return;
     }
 
-    const result = await updateCustomerPictureService(userId, req.file);
+    const result = await updatePictureService(userId, req.file);
 
     successResponse(res, { url: result.secure_url }, result.message);
   } catch (err: any) {

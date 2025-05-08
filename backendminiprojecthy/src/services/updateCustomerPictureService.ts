@@ -1,7 +1,7 @@
 import prisma from '../lib/prisma';
 import { cloudinaryUpload, cloudinaryRemove } from '../utils/cloudinary';
 
-export async function updateCustomerPictureService(userId: number, file: Express.Multer.File) {
+export async function updatePictureService(userId: number, file: Express.Multer.File) {
   let uploadedUrl = '';
 
   try {
