@@ -1,13 +1,16 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import {
   updateMyProfile,
   getCustomerProfileService,
 } from '../services/profile.service';
 import { successResponse, errorResponse } from '../utils/response';
+import { updatePictureService } from '../services/updateCustomerPictureService'; // ✅ pakai service baru
+import { AuthRequest } from '../middlewares/auth'; // ✅ tipe request yang punya `req.user`
+import { deleteCustomerPictureService } from '../services/deleteCustomerPictureService';
 
-// untuk CUSTOMER 
+// Ambil Data Profile
 export const getCustomerProfileController = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
@@ -24,9 +27,49 @@ export const getCustomerProfileController = async (
   }
 };
 
-// Update profil biasa (bisa untuk CUSTOMER dan ORGANIZER)
+//  Upload Foto Profil
+export const uploadProfilePictureController = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      errorResponse(res, 'Unauthorized', 401);
+      return;
+    }
+
+    if (!req.file) {
+      errorResponse(res, 'File tidak ditemukan', 400);
+      return;
+    }
+
+    const result = await updatePictureService(userId, req.file);
+
+    successResponse(res, { url: result.secure_url }, result.message);
+  } catch (err: any) {
+    errorResponse(res, err.message || 'Gagal upload foto', 500);
+  }
+};
+
+export const deleteProfilePictureController = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const result = await deleteCustomerPictureService(userId);
+    res.status(200).json({ success: true, message: result.message });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Gagal menghapus foto profil',
+    });
+  }
+};
+
 export const updateMyProfileController = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {

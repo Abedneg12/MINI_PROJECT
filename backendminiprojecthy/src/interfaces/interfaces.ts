@@ -12,25 +12,6 @@ export interface ILoginInput {
   password: string;
 }
 
-export interface ICoupon {
-  id: number;
-  code: string;
-  discount_amount: number;
-  expired_at: Date;
-}
-
-export interface IRewardResponse {
-  point: number;
-  coupons: ICoupon[];
-}
-
-
-export interface IUpdateProfileInput {
-  full_name?: string;
-  password?: string;
-  profile_picture?: string; // bisa jadi URL atau file, tergantung implementasi
-}
-
 export interface AuthRequest extends Request {
   user?: IUserPayload;
 }
@@ -41,7 +22,7 @@ export interface IUserPayload {
   role: 'CUSTOMER' | 'ORGANIZER';
 }
 
-// Extend Express.Request agar `req.user` dikenali oleh TypeScript
+// extend Express.Request agar `req.user` dikenali oleh TypeScript
 declare global {
   namespace Express {
     interface Request {

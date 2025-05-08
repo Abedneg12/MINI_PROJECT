@@ -2,6 +2,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import { FE_PORT, PORT } from "./config"
 import helmet from 'helmet';
 import cors from 'cors';
+import cron from 'node-cron';
+import { startExpireCronJob } from './utils/cron/expireTask';
 
 
 import RegisterRouter from "./routers/register.router";
@@ -52,3 +54,4 @@ app.use('/events', EventRouter);
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
+startExpireCronJob();

@@ -14,8 +14,9 @@ enum UserRole {
 }
 
 enum TransactionStatus {
-  WAITING
-  CONFIRMED
+  WAITING_FOR_PAYMENT
+  WAITING_FOR_ADMIN_CONFIRMATION
+  DONE
   REJECTED
   EXPIRED
   CANCELED
@@ -25,6 +26,13 @@ enum PointSource {
   REFERRAL
   REFUND
   REDEEM
+}
+
+enum EventCategory {
+  FESTIVAL
+  MUSIC
+  ART
+  EDUCATION
 }
 
 model User {
@@ -54,15 +62,16 @@ model ReferralLog {
   referral_used    User     @relation("ReceivedReferrals", fields: [referral_used_id], references: [id])
   referral_used_id Int
   created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
 }
 
 model Event {
-  id              Int      @id @default(autoincrement())
-  organizer       User     @relation(fields: [organizer_id], references: [id])
+  id              Int           @id @default(autoincrement())
+  organizer       User          @relation(fields: [organizer_id], references: [id])
   organizer_id    Int
   name            String
   description     String
-  category        String
+  category        EventCategory
   location        String
   paid            Boolean
   price           Int
@@ -70,7 +79,8 @@ model Event {
   end_date        DateTime
   total_seats     Int
   remaining_seats Int
-  created_at      DateTime @default(now())
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @default(now()) @updatedAt
 
   vouchers     Voucher[]
   transactions Transaction[]
@@ -87,6 +97,7 @@ model Voucher {
   start_date      DateTime
   end_date        DateTime
   is_active       Boolean  @default(true)
+  updated_at      DateTime @default(now()) @updatedAt
 
   transactions Transaction[]
 }
@@ -100,7 +111,7 @@ model Transaction {
   ticket_quantity Int
   price           Int
   total_price     Int
-  status          TransactionStatus
+  status          TransactionStatus @default(WAITING_FOR_PAYMENT)
   payment_proof   String?
   used_point      Int               @default(0)
   used_voucher    Voucher?          @relation(fields: [used_voucher_id], references: [id])
@@ -108,6 +119,7 @@ model Transaction {
   used_coupon     Coupon?           @relation(fields: [used_coupon_id], references: [id])
   used_coupon_id  Int?
   created_at      DateTime          @default(now())
+  updated_at      DateTime          @default(now()) @updatedAt
 
   review Review?
 }
@@ -121,6 +133,7 @@ model Coupon {
   expired_at      DateTime
   is_used         Boolean  @default(false)
   created_at      DateTime @default(now())
+  updated_at      DateTime @default(now()) @updatedAt
 
   transactions Transaction[]
 }
@@ -132,7 +145,9 @@ model Point {
   amount     Int
   source     PointSource
   expired_at DateTime
+  is_expired Boolean     @default(false)
   created_at DateTime    @default(now())
+  updated_at DateTime    @default(now()) @updatedAt
 }
 
 model Review {
@@ -144,4 +159,5 @@ model Review {
   rating         Int
   comment        String
   created_at     DateTime    @default(now())
+  updated_at     DateTime    @default(now()) @updatedAt
 }

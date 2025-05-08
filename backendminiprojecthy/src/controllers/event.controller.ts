@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { successResponse, errorResponse } from '../utils/response'
 import { getAllEvents, getEventById, createEvent, updateEvent, deleteEvent, searchEvents} from '../services/event.service';
-import { ICreateEventInput } from '../interfaces/event.interfaces';
+import { ICreateEventInput } from '../interfaces/event.interface';
 
 
 

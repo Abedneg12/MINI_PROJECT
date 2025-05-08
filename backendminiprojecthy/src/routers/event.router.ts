@@ -12,6 +12,8 @@ const router = express.Router();
 router.get('/search', searchEventsController); 
 router.get('/', getAllEventsController);
 router.get('/:id', getEventByIdController);
+
+// Private Route
 router.post('/create', authMiddleware, roleMiddleware('ORGANIZER'), createEventController);
 router.put('/:id', authMiddleware, roleMiddleware('ORGANIZER'), updateEventController);
 router.delete('/:id', authMiddleware, roleMiddleware('ORGANIZER'), deleteEventController);
