@@ -4,9 +4,11 @@ import {
   getCustomerProfileService,
 } from '../services/profile.service';
 import { successResponse, errorResponse } from '../utils/response';
-import { updatePictureService } from '../services/updateCustomerPictureService'; // ✅ pakai service baru
-import { AuthRequest } from '../middlewares/auth'; // ✅ tipe request yang punya `req.user`
+import { updatePictureService } from '../services/updateCustomerPictureService';
+import { AuthRequest } from '../middlewares/auth'; 
 import { deleteCustomerPictureService } from '../services/deleteCustomerPictureService';
+import { resetPasswordSchema } from '../validations/reset.password.validation';
+import { resetPasswordService } from '../services/resetPassword.service';
 
 // Ambil Data Profile
 export const getCustomerProfileController = async (
@@ -67,6 +69,30 @@ export const deleteProfilePictureController = async (
     });
   }
 };
+
+export const resetPasswordController = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      errorResponse(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      errorResponse(res, parsed.error.errors[0].message, 400);
+      return;
+    }
+
+    const result = await resetPasswordService(userId, parsed.data);
+    successResponse(res, null, result.message);
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Gagal reset password', 500);
+  }
+};
+
+
+
 
 export const updateMyProfileController = async (
   req: AuthRequest,

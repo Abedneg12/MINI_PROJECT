@@ -9,11 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMyProfileController = exports.deleteProfilePictureController = exports.uploadProfilePictureController = exports.getCustomerProfileController = void 0;
+exports.updateMyProfileController = exports.resetPasswordController = exports.deleteProfilePictureController = exports.uploadProfilePictureController = exports.getCustomerProfileController = void 0;
 const profile_service_1 = require("../services/profile.service");
 const response_1 = require("../utils/response");
-const updateCustomerPictureService_1 = require("../services/updateCustomerPictureService"); // ✅ pakai service baru
+const updateCustomerPictureService_1 = require("../services/updateCustomerPictureService");
 const deleteCustomerPictureService_1 = require("../services/deleteCustomerPictureService");
+const reset_password_validation_1 = require("../validations/reset.password.validation");
+const resetPassword_service_1 = require("../services/resetPassword.service");
 // Ambil Data Profile
 const getCustomerProfileController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -66,6 +68,27 @@ const deleteProfilePictureController = (req, res) => __awaiter(void 0, void 0, v
     }
 });
 exports.deleteProfilePictureController = deleteProfilePictureController;
+const resetPasswordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        if (!userId) {
+            (0, response_1.errorResponse)(res, 'Unauthorized', 401);
+            return;
+        }
+        const parsed = reset_password_validation_1.resetPasswordSchema.safeParse(req.body);
+        if (!parsed.success) {
+            (0, response_1.errorResponse)(res, parsed.error.errors[0].message, 400);
+            return;
+        }
+        const result = yield (0, resetPassword_service_1.resetPasswordService)(userId, parsed.data);
+        (0, response_1.successResponse)(res, null, result.message);
+    }
+    catch (error) {
+        (0, response_1.errorResponse)(res, error.message || 'Gagal reset password', 500);
+    }
+});
+exports.resetPasswordController = resetPasswordController;
 const updateMyProfileController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const updatedUser = yield (0, profile_service_1.updateMyProfile)(req.user.id, req.body);

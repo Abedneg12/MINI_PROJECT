@@ -1,3 +1,8 @@
+export interface IResetPasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface IUpdateProfileInput {
   full_name?: string;
   password?: string;
