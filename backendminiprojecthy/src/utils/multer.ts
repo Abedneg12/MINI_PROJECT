@@ -37,7 +37,7 @@ export function Multer(
   return multer({
     storage,
     limits: {
-      fileSize: 1024 * 1024, // 1MB max
+      fileSize: 3*1024 * 1024, // 1MB max
     },
     fileFilter: (req, file, cb) => {
       if (file.mimetype.startsWith("image/")) {

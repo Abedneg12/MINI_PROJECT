@@ -2,10 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { ICreateEventInput } from '../interfaces/event.interface';
 import { EventCategory } from '@prisma/client';
 
-
 const prisma = new PrismaClient();
 
-//1. mengambil semua event
+// 1. Mengambil semua event
 export const getAllEvents = async () => {
   const events = await prisma.event.findMany({
     orderBy: { created_at: 'desc' },
@@ -22,7 +21,7 @@ export const getAllEvents = async () => {
   return events;
 };
 
-//2. mengambil event berdasarkan keyword
+// 2. Mencari event berdasarkan keyword
 export async function searchEvents(keyword: string) {
   if (!keyword.trim()) {
     throw new Error('Keyword tidak boleh kosong');
@@ -30,7 +29,9 @@ export async function searchEvents(keyword: string) {
 
   const lowered = keyword.toLowerCase();
 
-  const isCategory = Object.values(EventCategory).some(cat => cat.toLowerCase() === lowered);
+  const isCategory = Object.values(EventCategory).some(
+    (cat) => cat.toLowerCase() === lowered
+  );
   const categoryFilter = isCategory
     ? [{ category: keyword.toUpperCase() as EventCategory }]
     : [];
@@ -61,8 +62,7 @@ export async function searchEvents(keyword: string) {
   return events;
 }
 
-
-//3. mengambil event berdasarkan ID
+// 3. Mengambil event berdasarkan ID
 export const getEventById = async (id: number) => {
   const event = await prisma.event.findUnique({
     where: { id },
@@ -82,25 +82,34 @@ export const getEventById = async (id: number) => {
   }
 
   return event;
-};
+}
 
-//4. membuat create event
+// 4. Membuat event baru
 export const createEvent = async (
   input: ICreateEventInput,
   organizer_id: number
 ) => {
   const newEvent = await prisma.event.create({
     data: {
-      ...input,
+      name: input.name,
+      description: input.description,
+      category: input.category,
+      location: input.location,
+      paid: input.paid,
+      price: input.price,
+      start_date: new Date(input.start_date),
+      end_date: new Date(input.end_date),
+      total_seats: input.total_seats,
+      remaining_seats: input.total_seats,  // Set initial remaining_seats same as total_seats
+      image_url: input.image_url || null,  // Store image URL if available
       organizer_id,
-      remaining_seats: input.total_seats,
     },
   });
 
   return newEvent;
 };
 
-//5. Update event
+// 5. Update event
 export const updateEvent = async (
   eventId: number,
   organizerId: number,
@@ -118,15 +127,24 @@ export const updateEvent = async (
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
-      ...input,
+      name: input.name || event.name,
+      description: input.description || event.description,
+      category: input.category || event.category,
+      location: input.location || event.location,
+      paid: input.paid ?? event.paid,  // Default to current value if not provided
+      price: input.price ?? event.price,
+      start_date: input.start_date ? new Date(input.start_date) : event.start_date,
+      end_date: input.end_date ? new Date(input.end_date) : event.end_date,
+      total_seats: input.total_seats ?? event.total_seats,
+      remaining_seats: input.remaining_seats ?? event.remaining_seats,
+      image_url: input.image_url || event.image_url,
     },
   });
 
   return updated;
 };
 
-
-//6. Detele Event
+// 6. Menghapus event
 export const deleteEvent = async (eventId: number, organizerId: number) => {
   // Cek apakah event dimiliki oleh organizer
   const event = await prisma.event.findUnique({
@@ -137,7 +155,7 @@ export const deleteEvent = async (eventId: number, organizerId: number) => {
     throw new Error('Event tidak ditemukan atau bukan milik Anda');
   }
 
-  // 8. Hapus event
+  // Hapus event
   await prisma.event.delete({
     where: { id: eventId },
   });

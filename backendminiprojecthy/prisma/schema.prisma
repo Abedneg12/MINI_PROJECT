@@ -13,6 +13,17 @@ enum UserRole {
   ORGANIZER
 }
 
+enum SeatStatus {
+  AVAILABLE
+  BOOKED
+}
+
+enum TicketType {
+  FREE
+  VIP
+  REGULAR
+}
+
 enum TransactionStatus {
   WAITING_FOR_PAYMENT
   WAITING_FOR_ADMIN_CONFIRMATION
@@ -73,18 +84,49 @@ model Event {
   description     String
   category        EventCategory
   location        String
-  paid            Boolean
+  paid            Boolean       @default(false)
   price           Int
-  start_date      DateTime
-  end_date        DateTime
   total_seats     Int
   remaining_seats Int
+  image_url       String?
+  start_date      DateTime
+  end_date        DateTime
   created_at      DateTime      @default(now())
-  updated_at      DateTime      @default(now()) @updatedAt
+  updated_at      DateTime      @updatedAt
 
   vouchers     Voucher[]
   transactions Transaction[]
   reviews      Review[]
+  Ticket       Ticket[]
+}
+
+model Ticket {
+  id          Int        @id @default(autoincrement())
+  event       Event      @relation(fields: [event_id], references: [id])
+  event_id    Int
+  type        TicketType // ← menggunakan enum, bukan string bebas lagi
+  price       Int
+  quantity    Int
+  description String
+  seat        Seat?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Seat {
+  id        Int        @id @default(autoincrement())
+  ticket    Ticket     @relation(fields: [ticket_id], references: [id])
+  ticket_id Int        @unique
+  section   String
+  row       String
+  number    Int
+  price     Int
+  type      String?
+  status    SeatStatus @default(AVAILABLE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Voucher {
