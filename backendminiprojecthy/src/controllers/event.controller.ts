@@ -1,126 +1,132 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { successResponse, errorResponse } from '../utils/response';
-import {
-  getAllEvents,
-  getEventById,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-  searchEvents,
-} from '../services/event.service';
-import {
-  uploadEventImageService,
-  deleteEventImageService,
-} from '../services/eventImage.service';
-import { ICreateEventInput } from '../interfaces/event.interface';
+import { createEventSchema } from '../validations/createEventSchema';
 import { AuthRequest } from '../middlewares/auth';
+import * as EventService from '../services/event.service';
+import { cloudinaryUpload } from '../utils/cloudinary';
 
-// 1. Menampilkan semua event
-export const getAllEventsController = async (req: AuthRequest, res: Response): Promise<void> => {
+// GET /events
+export const getAllEventsController = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const events = await getAllEvents();
-    successResponse(res, events, 'Daftar event berhasil diambil');
+    const events = await EventService.getAllEvents();
+    successResponse(res, events, 'Berhasil mengambil semua event');
   } catch (error: any) {
-    errorResponse(res, error.message || 'Gagal mengambil daftar event', 500);
+    errorResponse(res, error.message || 'Gagal mengambil event', 500);
   }
 };
 
-// 2. Mencari event berdasarkan keyword
-export const searchEventsController = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+// GET /events/:id
+export const getEventByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { keyword } = req.query;
-
-    if (!keyword || typeof keyword !== 'string') {
-      errorResponse(res, 'Keyword harus disediakan dalam query params.', 400);
-      return;
-    }
-
-    const events = await searchEvents(keyword);
-    successResponse(res, events, 'Pencarian event berhasil');
-  } catch (error) {
-    errorResponse(res, (error as Error).message || 'Gagal mencari event', 500);
-  }
-};
-
-// 3. Mendapatkan event berdasarkan ID
-export const getEventByIdController = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      errorResponse(res, 'ID tidak valid', 400);
-      return;
-    }
-
-    const event = await getEventById(id);
-    successResponse(res, event, 'Detail event berhasil diambil');
+    const eventId = Number(req.params.id);
+    const event = await EventService.getEventById(eventId);
+    successResponse(res, event, 'Berhasil mengambil event');
   } catch (error: any) {
-    errorResponse(res, error.message || 'Gagal mengambil detail event', 404);
+    errorResponse(res, error.message || 'Gagal mengambil event', 404);
   }
 };
 
-// 4. Membuat event
+// GET /events/search?keyword=...
+export const searchEventController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const keyword = String(req.query.keyword || '');
+    const results = await EventService.searchEvents(keyword);
+    successResponse(res, results, 'Berhasil mencari event');
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Gagal mencari event', 400);
+  }
+};
+
+
 export const createEventController = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== 'ORGANIZER') {
-      errorResponse(res, 'Hanya organizer yang dapat membuat event', 403);
+    const organizerId = req.user?.id;
+    if (!organizerId) {
+      errorResponse(res, 'Unauthorized', 401);
       return;
     }
 
-    const input: ICreateEventInput = req.body;
-    const newEvent = await createEvent(input, req.user.id);
-    successResponse(res, newEvent, 'Event berhasil dibuat', 201);
+    if (!req.file) {
+      errorResponse(res, 'Gambar event wajib diunggah', 400);
+      return;
+    }
+
+    // Ubah tipe data dari string ke tipe yang sesuai
+    const formattedBody = {
+      ...req.body,
+      subtitle: req.body.subtitle,
+      paid: req.body.paid === 'true',
+      price: Number(req.body.price),
+      total_seats: Number(req.body.total_seats),
+    };
+
+    const parsed = createEventSchema.safeParse(formattedBody);
+    if (!parsed.success) {
+      errorResponse(res, parsed.error.errors[0].message, 400);
+      return;
+    }
+
+    const image = await cloudinaryUpload(req.file);
+
+    const newEvent = await EventService.createEvent(
+      {
+        ...parsed.data,
+        start_date: new Date(req.body.start_date),
+        end_date: new Date(req.body.end_date),
+        organizer_id: organizerId,
+      },
+      organizerId,
+      image.secure_url
+    );
+
+    successResponse(res, newEvent, 'Event berhasil dibuat');
   } catch (error: any) {
     errorResponse(res, error.message || 'Gagal membuat event', 500);
   }
 };
 
-// 5. Memperbarui event
-export const updateEventController = async (req: AuthRequest, res: Response): Promise<void> => {
+
+
+export const updateEventImageController = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const eventId = Number(req.params.id);
-    const updated = await updateEvent(eventId, req.user!.id, req.body);
-    successResponse(res, updated, 'Event berhasil diperbarui');
-  } catch (err: any) {
-    errorResponse(res, err.message || 'Gagal memperbarui event', 400);
-  }
-};
+    const organizerId = req.user?.id;
 
-// 6. Menghapus event
-export const deleteEventController = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const eventId = Number(req.params.id);
-    const result = await deleteEvent(eventId, req.user!.id);
-    successResponse(res, result, 'Event berhasil dihapus');
-  } catch (err: any) {
-    errorResponse(res, err.message || 'Gagal menghapus event', 400);
-  }
-};
-
-// 7. Upload foto event
-export const uploadEventImageController = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const eventId = Number(req.params.id);
-    const file = req.file;
-
-    if (!file) {
+    if (!req.file) {
       errorResponse(res, 'File gambar tidak ditemukan', 400);
       return;
     }
 
-    const updatedEvent = await uploadEventImageService(eventId, file, req.user!.id);
-    successResponse(res, updatedEvent, 'Gambar event berhasil diupload');
-  } catch (err: any) {
-    errorResponse(res, err.message || 'Gagal upload gambar', 500);
+    const image = await cloudinaryUpload(req.file);
+    const updated = await EventService.updateEventImage(eventId, organizerId!, image.secure_url);
+    successResponse(res, updated, 'Gambar event berhasil diperbarui');
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Gagal memperbarui gambar event', 500);
   }
 };
 
-// 8. Hapus foto event
-export const deleteEventImageController = async (req: AuthRequest, res: Response): Promise<void> => {
+// PUT /events/:id
+export const updateEventController = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const eventId = Number(req.params.id);
-    const result = await deleteEventImageService(eventId, req.user!.id);
-    successResponse(res, result, 'Gambar event berhasil dihapus');
-  } catch (err: any) {
-    errorResponse(res, err.message || 'Gagal menghapus gambar event', 500);
+    const organizerId = req.user?.id;
+
+    const updated = await EventService.updateEvent(eventId, organizerId!, req.body);
+    successResponse(res, updated, 'Event berhasil diperbarui');
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Gagal memperbarui event', 500);
+  }
+};
+
+// DELETE /events/:id
+export const deleteEventController = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const eventId = Number(req.params.id);
+    const organizerId = req.user?.id;
+
+    const result = await EventService.deleteEvent(eventId, organizerId!);
+    successResponse(res, null, result.message);
+  } catch (error: any) {
+    errorResponse(res, error.message || 'Gagal menghapus event', 500);
   }
 };

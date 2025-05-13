@@ -4,7 +4,8 @@ import {
   getCustomerProfileController,
   updateMyProfileController,
   uploadProfilePictureController,
-  resetPasswordController
+  resetPasswordController,
+  getOrganizerProfileController, // ✅ tambahkan
 } from '../controllers/profile.controller';
 import { authMiddleware } from '../middlewares/auth';
 import { roleMiddleware } from '../middlewares/role';
@@ -12,13 +13,10 @@ import { Multer } from '../utils/multer';
 
 const router = express.Router();
 
-router.patch(
-  '/reset-password',
-  authMiddleware,
-  resetPasswordController
-);
+// 🔐 RESET PASSWORD
+router.patch('/reset-password', authMiddleware, resetPasswordController);
 
-// GET Profil Customer
+// 🔐 CUSTOMER PROFILE
 router.get(
   '/me/customer',
   authMiddleware,
@@ -26,14 +24,6 @@ router.get(
   getCustomerProfileController
 );
 
-// PUT Update Profil Customer
-router.put(
-  '/update',
-  authMiddleware,
-  updateMyProfileController
-);
-
-// PATCH Upload Foto Profil Customer
 router.patch(
   '/customer/upload-picture',
   authMiddleware,
@@ -42,7 +32,6 @@ router.patch(
   uploadProfilePictureController
 );
 
-
 router.patch(
   '/customer/delete-picture',
   authMiddleware,
@@ -50,5 +39,30 @@ router.patch(
   deleteProfilePictureController
 );
 
+// 🔐 ORGANIZER PROFILE
+router.get(
+  '/me/organizer',
+  authMiddleware,
+  roleMiddleware('ORGANIZER'),
+  getOrganizerProfileController
+);
+
+router.patch(
+  '/organizer/upload-picture',
+  authMiddleware,
+  roleMiddleware('ORGANIZER'),
+  Multer('memoryStorage').single('profile_picture'),
+  uploadProfilePictureController
+);
+
+router.patch(
+  '/organizer/delete-picture',
+  authMiddleware,
+  roleMiddleware('ORGANIZER'),
+  deleteProfilePictureController
+);
+
+// 🔐 UPDATE PROFILE (umum untuk semua user)
+router.put('/update', authMiddleware, updateMyProfileController);
 
 export default router;

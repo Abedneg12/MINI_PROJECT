@@ -2,6 +2,7 @@ import { Response } from 'express';
 import {
   updateMyProfile,
   getCustomerProfileService,
+  getOrganizerProfileService,
 } from '../services/profile.service';
 import { successResponse, errorResponse } from '../utils/response';
 import { updatePictureService } from '../services/updateCustomerPictureService';
@@ -10,7 +11,7 @@ import { deleteCustomerPictureService } from '../services/deleteCustomerPictureS
 import { resetPasswordSchema } from '../validations/reset.password.validation';
 import { resetPasswordService } from '../services/resetPassword.service';
 
-// Ambil Data Profile
+// Ambil Data Profile Customer
 export const getCustomerProfileController = async (
   req: AuthRequest,
   res: Response
@@ -29,7 +30,26 @@ export const getCustomerProfileController = async (
   }
 };
 
-//  Upload Foto Profil
+// Ambil Data Profile Organizer
+export const getOrganizerProfileController = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      errorResponse(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const profile = await getOrganizerProfileService(userId);
+    successResponse(res, profile, 'Berhasil mengambil profil organizer');
+  } catch (err: any) {
+    errorResponse(res, err.message || 'Gagal mengambil profil organizer', 500);
+  }
+};
+
+// Upload Foto Profil
 export const uploadProfilePictureController = async (
   req: AuthRequest,
   res: Response
@@ -54,6 +74,7 @@ export const uploadProfilePictureController = async (
   }
 };
 
+// Hapus Foto Profil
 export const deleteProfilePictureController = async (
   req: AuthRequest,
   res: Response
@@ -70,7 +91,11 @@ export const deleteProfilePictureController = async (
   }
 };
 
-export const resetPasswordController = async (req: AuthRequest, res: Response): Promise<void> => {
+// Reset Password
+export const resetPasswordController = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -91,9 +116,7 @@ export const resetPasswordController = async (req: AuthRequest, res: Response): 
   }
 };
 
-
-
-
+// Update Profil
 export const updateMyProfileController = async (
   req: AuthRequest,
   res: Response

@@ -14,7 +14,7 @@ export const getCustomerProfileService = async (userId: number) => {
       email: true,
       referral_code: true,
       is_verified: true,
-      profile_picture: true, // ✅ tambahkan ini
+      profile_picture: true,
       points: {
         select: {
           amount: true,
@@ -41,7 +41,6 @@ export const getCustomerProfileService = async (userId: number) => {
               id: true,
               code: true,
               discount_amount: true,
-              discount_type: true,
               event: {
                 select: {
                   name: true,
@@ -72,6 +71,39 @@ export const getCustomerProfileService = async (userId: number) => {
   };
 };
 
+export const getOrganizerProfileService = async (userId: number) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      full_name: true,
+      email: true,
+      profile_picture: true,
+      is_verified: true,
+      events: {
+        select: {
+          id: true,
+          name: true,
+          start_date: true,
+          image_url: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error('User tidak ditemukan');
+  }
+
+  return {
+    id: user.id,
+    full_name: user.full_name,
+    email: user.email,
+    profile_picture: user.profile_picture,
+    is_verified: user.is_verified,
+    events: user.events, // jika tidak mau tampilkan events, hapus bagian ini
+  };
+};
 export const updateMyProfile = async (userId: number, input: IUpdateProfileInput) => {
   const updateData: any = {};
 

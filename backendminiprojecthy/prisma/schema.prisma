@@ -82,6 +82,7 @@ model Event {
   organizer_id    Int
   name            String
   description     String
+  subtitle        String
   category        EventCategory
   location        String
   paid            Boolean       @default(false)
@@ -104,26 +105,10 @@ model Ticket {
   id          Int        @id @default(autoincrement())
   event       Event      @relation(fields: [event_id], references: [id])
   event_id    Int
-  type        TicketType // ← menggunakan enum, bukan string bebas lagi
+  type        TicketType
   price       Int
   quantity    Int
   description String
-  seat        Seat?
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Seat {
-  id        Int        @id @default(autoincrement())
-  ticket    Ticket     @relation(fields: [ticket_id], references: [id])
-  ticket_id Int        @unique
-  section   String
-  row       String
-  number    Int
-  price     Int
-  type      String?
-  status    SeatStatus @default(AVAILABLE)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -135,7 +120,6 @@ model Voucher {
   event_id        Int
   code            String   @unique
   discount_amount Int
-  discount_type   String
   start_date      DateTime
   end_date        DateTime
   is_active       Boolean  @default(true)
