@@ -40,7 +40,7 @@ export const RegisterService = async (input: IRegisterInput) => {
         password: hashedPassword,
         role,
         referral_code: newReferralCode,
-        is_verified: false, // ← Penting!
+        is_verified: false, // 
       },
     });
 

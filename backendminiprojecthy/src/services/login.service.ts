@@ -28,7 +28,7 @@ export const LoginService = async (input: ILoginInput) => {
       role: user.role,
     },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '1d' }
   );
 
   return {

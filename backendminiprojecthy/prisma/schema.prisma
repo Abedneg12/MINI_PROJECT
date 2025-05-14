@@ -98,20 +98,6 @@ model Event {
   vouchers     Voucher[]
   transactions Transaction[]
   reviews      Review[]
-  Ticket       Ticket[]
-}
-
-model Ticket {
-  id          Int        @id @default(autoincrement())
-  event       Event      @relation(fields: [event_id], references: [id])
-  event_id    Int
-  type        TicketType
-  price       Int
-  quantity    Int
-  description String
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
 }
 
 model Voucher {

@@ -11,31 +11,22 @@ import {
 import { authMiddleware } from '../middlewares/auth';
 import { roleMiddleware } from '../middlewares/role';
 import { Multer } from '../utils/multer';
-import { createVoucherController } from '../controllers/voucher.controller';
 
 const router = express.Router();
 const upload = Multer('memoryStorage');
 
-// 🔓 Public Routes – bisa diakses siapa saja
-router.get('/search', searchEventController);          // Cari event
-router.get('/', getAllEventsController);               // Ambil semua event
-router.get('/:id', getEventByIdController);            // Ambil detail event berdasarkan ID
+// 🔓 Public Routes
+router.get('/search', searchEventController);
+router.get('/', getAllEventsController);
+router.get('/:id', getEventByIdController);
 
-// 🔐 Private Routes – hanya untuk ORGANIZER
+// 🔐 Private Routes (ORGANIZER only)
 router.post(
   '/create',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
-  upload.single('image'), // ✅ upload gambar di create
+  upload.single('image'),
   createEventController
-);
-
-
-router.post(
-  '/:id/voucher',
-  authMiddleware,
-  roleMiddleware('ORGANIZER'),
-  createVoucherController 
 );
 
 router.put(
@@ -44,27 +35,20 @@ router.put(
   roleMiddleware('ORGANIZER'),
   updateEventController
 );
-router.delete(
-  '/:id',
-  authMiddleware,
-  roleMiddleware('ORGANIZER'),
-  deleteEventController
-);
 
-// 📸 Upload dan Delete Gambar Event
 router.patch(
   '/:id/upload-image',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
   upload.single('image'),
-  updateEventImageController // ✅ sesuai nama fungsi sebenarnya
+  updateEventImageController
 );
 
 router.delete(
-  '/:id/delete-image',
+  '/:id',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
-  deleteEventController // ✅ jika tersedia di controllermu
+  deleteEventController
 );
 
 export default router;

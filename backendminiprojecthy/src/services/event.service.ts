@@ -73,28 +73,62 @@ export const searchEvents = async (keyword: string) => {
   });
 };
 
-// Create event
-export const createEvent = async (
+// Create event with voucher and tickets
+export const createEventWithVoucher = async (
   input: ICreateEventInput,
-  organizer_id: number,
-  imageUrl: string
+  imageUrl: string,
+  voucherData?: {
+    code: string;
+    discount_amount: number;
+    start_date: Date;
+    end_date: Date;
+  },
+  ticketsData?: {
+    type: 'FREE' | 'VIP' | 'REGULAR';
+    price: number;
+    quantity: number;
+    description?: string;
+  }[]
 ) => {
-  return prisma.event.create({
-    data: {
-      name: input.name,
-      description: input.description,
-      subtitle: input.subtitle,
-      category: input.category,
-      location: input.location,
-      paid: input.paid,
-      price: input.price,
-      total_seats: input.total_seats,
-      remaining_seats: input.total_seats,
-      start_date: new Date(input.start_date),
-      end_date: new Date(input.end_date),
-      image_url: imageUrl,
-      organizer_id,
-    },
+  return await prisma.$transaction(async (tx) => {
+    const event = await tx.event.create({
+      data: {
+        name: input.name,
+        description: input.description,
+        subtitle: input.subtitle,
+        category: input.category,
+        location: input.location,
+        paid: input.paid,
+        price: input.price,
+        total_seats: input.total_seats,
+        remaining_seats: input.total_seats,
+        start_date: new Date(input.start_date),
+        end_date: new Date(input.end_date),
+        image_url: imageUrl,
+        organizer_id: input.organizer_id,
+      },
+    });
+
+    // Buat voucher jika ada datanya
+    if (voucherData) {
+      await tx.voucher.create({
+        data: {
+          event_id: event.id,
+          code: voucherData.code,
+          discount_amount: voucherData.discount_amount,
+          start_date: voucherData.start_date,
+          end_date: voucherData.end_date,
+        },
+      });
+    }
+
+    // Ambil event lengkap dengan voucher dan ticket
+    const fullEvent = await tx.event.findUnique({
+      where: { id: event.id },
+      include: { vouchers: true},
+    });
+
+    return fullEvent!;
   });
 };
 
@@ -114,14 +148,12 @@ export const updateEvent = async (
     data: {
       name: input.name ?? event.name,
       description: input.description ?? event.description,
-      subtitle: input.subtitle ?? event.subtitle,
       category: input.category ?? event.category,
       location: input.location ?? event.location,
       paid: input.paid ?? event.paid,
       price: input.price ?? event.price,
       total_seats: input.total_seats ?? event.total_seats,
-      remaining_seats:
-      input.remaining_seats !== undefined ? input.remaining_seats : event.remaining_seats,
+      remaining_seats: input.remaining_seats ?? event.remaining_seats,
       start_date: input.start_date ? new Date(input.start_date) : event.start_date,
       end_date: input.end_date ? new Date(input.end_date) : event.end_date,
       image_url: input.image_url ?? event.image_url,
@@ -129,7 +161,7 @@ export const updateEvent = async (
   });
 };
 
-// Update event image only
+
 export const updateEventImage = async (
   eventId: number,
   organizerId: number,
