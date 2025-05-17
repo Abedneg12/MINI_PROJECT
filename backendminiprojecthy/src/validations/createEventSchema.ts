@@ -1,17 +1,21 @@
 import { z } from "zod";
 
- 
-export const createEventSchema = z.object({
-    name: z.string().min(6),
-    description: z.string().min(10),
-    subtitle: z.string().min(5),
+export const createEventSchema = z
+  .object({
+    name: z.string().min(6, { message: "Nama event minimal 6 karakter" }),
+    description: z.string().min(10, { message: "Deskripsi minimal 10 karakter" }),
+    subtitle: z.string().min(5, { message: "Subtitle minimal 5 karakter" }),
     category: z.enum(["FESTIVAL", "MUSIC", "ART", "EDUCATION"]),
-    location: z.string().min(5),
+    location: z.string().min(5, { message: "Lokasi minimal 5 karakter" }),
     paid: z.boolean(),
-    price: z.number().nonnegative(),
-    start_date: z.string(),
-    end_date: z.string(),
-    total_seats: z.number().min(1),
+    price: z.number().nonnegative({ message: "Harga tidak boleh negatif" }),
+    start_date: z
+      .string()
+      .refine((s) => !isNaN(Date.parse(s)), { message: "Format start_date tidak valid" }),
+    end_date: z
+      .string()
+      .refine((s) => !isNaN(Date.parse(s)), { message: "Format end_date tidak valid" }),
+    total_seats: z.number().int().min(1, { message: "Total seats minimal 1" }),
 
     voucher_code: z.string().optional(),
     voucher_discount: z
@@ -19,5 +23,34 @@ export const createEventSchema = z.object({
       .optional(),
     voucher_start: z.string().optional(),
     voucher_end: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paid && data.price <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Harga harus > 0 untuk event berbayar",
+        path: ["price"],
+      });
+    }
+    if (!data.paid && data.price !== 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Harga harus 0 untuk event gratis",
+        path: ["price"],
+      });
+    }
+    const start = Date.parse(data.start_date);
+    const end = Date.parse(data.end_date);
+    if (!isNaN(start) && !isNaN(end) && start >= end) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "start_date harus sebelum end_date",
+        path: ["start_date"],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "end_date harus setelah start_date",
+        path: ["end_date"],
+      });
+    }
   });
-  

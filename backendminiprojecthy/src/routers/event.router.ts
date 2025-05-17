@@ -1,54 +1,78 @@
 import express from 'express';
-import {
-  createEventController,
-  deleteEventController,
-  getAllEventsController,
-  getEventByIdController,
-  searchEventController,
-  updateEventController,
-  updateEventImageController,
-} from '../controllers/event.controller';
 import { authMiddleware } from '../middlewares/auth';
 import { roleMiddleware } from '../middlewares/role';
+import { validateBody, validateParams, validateQuery } from '../middlewares/validate';
+import { createEventSchema } from '../validations/createEventSchema';
+import { z } from 'zod';
+import * as EventController from '../controllers/event.controller';
 import { Multer } from '../utils/multer';
 
 const router = express.Router();
 const upload = Multer('memoryStorage');
 
-// 🔓 Public Routes
-router.get('/search', searchEventController);
-router.get('/', getAllEventsController);
-router.get('/:id', getEventByIdController);
+//////////////////////////////////////////////////////
+router.get(
+  '/',
+  EventController.getAllEventsController
+);
 
-// 🔐 Private Routes (ORGANIZER only)
+/////////////////////////////////////////////////////
+const searchQuerySchema = z.object({
+  keyword: z.string().min(1, { message: "Keyword tidak boleh kosong" }),
+});
+router.get(
+  '/search',
+  validateQuery(searchQuerySchema),
+  EventController.searchEventController
+);
+
+////////////////////////////////////////////////////////
+const idParamSchema = z.object({
+  id: z.string().regex(/^\d+$/, "ID harus angka").transform(Number),
+});
+router.get(
+  '/:id',
+  validateParams(idParamSchema),
+  EventController.getEventByIdController
+);
+
+/////////////////////////////////////////////////////////
 router.post(
   '/create',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
   upload.single('image'),
-  createEventController
+  validateBody(createEventSchema),
+  EventController.createEventController
 );
 
+/////////////////////////////////////////////////////////
 router.put(
-  '/:id',
+  '/update/:id',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
-  updateEventController
+  validateParams(idParamSchema),
+  validateBody(createEventSchema),
+  EventController.updateEventController
 );
 
+////////////////////////////////////////////////////////
 router.patch(
-  '/:id/upload-image',
+  '/:id/image',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
+  validateParams(idParamSchema),
   upload.single('image'),
-  updateEventImageController
+  EventController.updateEventImageController
 );
 
+////////////////////////////////////////////////////////
 router.delete(
   '/:id',
   authMiddleware,
   roleMiddleware('ORGANIZER'),
-  deleteEventController
+  validateParams(idParamSchema),
+  EventController.deleteEventController
 );
-
+/////////////////////////////////////////////////////////
 export default router;

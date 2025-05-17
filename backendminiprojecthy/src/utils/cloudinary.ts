@@ -22,9 +22,6 @@ export function cloudinaryUpload(file: Express.Multer.File): Promise<UploadApiRe
 }
 
 
- //Mengekstrak public_id dari secure_url
- //Misal: https://res.cloudinary.com/xxx/image/upload/v1234567/abcde.jpg -> abcde
- 
 export function extractPublicIdFromUrl(url: string): string {
   try {
     const parts = url.split("/");

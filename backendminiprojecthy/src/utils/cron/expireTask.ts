@@ -11,7 +11,6 @@ export function startExpireCronJob() {
     console.log('Menjalankan cron job untuk cek Coupon dan Point expired');
 
     try {
-      // Expire Coupon: jika sudah lewat expired_at dan belum digunakan
       const expiredCoupons = await prisma.coupon.updateMany({
         where: {
           expired_at: { lt: now },
@@ -20,13 +19,12 @@ export function startExpireCronJob() {
         data: { is_used: true },
       });
 
-      // Expire Point: jika sudah lewat expired_at
-      const expiredPoints = await prisma.point.updateMany({
+        const expiredPoints = await prisma.point.updateMany({
         where: {
           expired_at: { lt: now },
           amount: { gt: 0 },
         },
-        data: { amount: 0 }, // atau bisa tambahkan is_expired: true jika field ada
+        data: { amount: 0 }, 
       });
 
       console.log(`Expired coupons: ${expiredCoupons.count}`);

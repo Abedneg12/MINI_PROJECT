@@ -77,9 +77,24 @@ export const getOrganizerProfileService = async (userId: number) => {
     select: {
       id: true,
       full_name: true,
+      referral_code: true,
       email: true,
       profile_picture: true,
       is_verified: true,
+      points: {
+        select: { 
+          amount: true,
+        },
+      },
+      coupons: {
+        where: { is_used: false },
+        select: {
+          id: true,
+          code: true,
+          discount_amount: true,
+          expired_at: true,
+        },
+      },
       events: {
         select: {
           id: true,
@@ -99,11 +114,18 @@ export const getOrganizerProfileService = async (userId: number) => {
     id: user.id,
     full_name: user.full_name,
     email: user.email,
-    profile_picture: user.profile_picture,
+    referral_code: user.referral_code,
     is_verified: user.is_verified,
-    events: user.events, // jika tidak mau tampilkan events, hapus bagian ini
+    profile_picture: user?.profile_picture,
+    point: (user.points || []).reduce((acc, curr) => acc + curr.amount, 0),
+    coupons: user.coupons,
+    events: user.events  
   };
 };
+
+
+
+
 export const updateMyProfile = async (userId: number, input: IUpdateProfileInput) => {
   const updateData: any = {};
 

@@ -4,7 +4,6 @@ import {
   getCustomerProfileController,
   updateMyProfileController,
   uploadProfilePictureController,
-  resetPasswordController,
   getOrganizerProfileController, // ✅ tambahkan
 } from '../controllers/profile.controller';
 import { authMiddleware } from '../middlewares/auth';
@@ -13,10 +12,8 @@ import { Multer } from '../utils/multer';
 
 const router = express.Router();
 
-// 🔐 RESET PASSWORD
-router.patch('/reset-password', authMiddleware, resetPasswordController);
 
-// 🔐 CUSTOMER PROFILE
+
 router.get(
   '/me/customer',
   authMiddleware,
@@ -39,7 +36,7 @@ router.patch(
   deleteProfilePictureController
 );
 
-// 🔐 ORGANIZER PROFILE
+
 router.get(
   '/me/organizer',
   authMiddleware,
@@ -62,7 +59,7 @@ router.patch(
   deleteProfilePictureController
 );
 
-// 🔐 UPDATE PROFILE (umum untuk semua user)
+
 router.put('/update', authMiddleware, updateMyProfileController);
 
 export default router;

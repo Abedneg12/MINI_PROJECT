@@ -10,7 +10,6 @@ export interface AuthRequest extends Request {
   user?: IUserPayload;
 }
 
-// Middleware untuk verifikasi JWT token
 export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
