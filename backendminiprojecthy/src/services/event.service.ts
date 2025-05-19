@@ -89,12 +89,6 @@ export const createEventWithVoucher = async (
     });
 
     if (voucherData) {
-      const eventStart = new Date(input.start_date);
-      const eventEnd = new Date(input.end_date);
-      if (voucherData.start_date < eventStart || voucherData.end_date > eventEnd) {
-        throw new Error('Voucher harus berada dalam rentang tanggal event');
-      }
-     
       if (voucherData.start_date >= voucherData.end_date) {
         throw new Error('voucher_start harus sebelum voucher_end');
       }
