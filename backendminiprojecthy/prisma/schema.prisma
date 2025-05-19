@@ -121,6 +121,7 @@ model Transaction {
   event           Event             @relation(fields: [event_id], references: [id])
   event_id        Int
   ticket_quantity Int
+  ticket_code     String            @unique
   price           Int
   total_price     Int
   status          TransactionStatus @default(WAITING_FOR_PAYMENT)

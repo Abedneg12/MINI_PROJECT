@@ -14,9 +14,10 @@ import EventRouter from './routers/event.router';
 import verifyRouter from './routers/verify.router';
 import myEVent from './routers/event.organizer.router';
 import ResetPassword from './routers/reset.password.router';
+import transactionRouter from './routers/transaction.router';
 
 
-const port = PORT || 5000;
+const port = PORT || 8000;
 const app: Application = express();
 
 app.use(helmet());
@@ -37,7 +38,7 @@ app.get(
     res.status(200).send("ini API event_management kita");
   }
 );
-
+app.use('/transaction', transactionRouter);
 app.use("/auth", RegisterRouter);
 app.use("/auth", LoginRouter);
 app.use("/auth", verifyRouter); 
@@ -46,6 +47,7 @@ app.use('/organizer', DashboardRouter);
 app.use('/events', EventRouter);
 app.use('/organizer', myEVent);
 app.use('/act', ResetPassword);
+
 
 
 app.listen(port, () => {
