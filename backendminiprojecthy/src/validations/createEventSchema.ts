@@ -7,16 +7,20 @@ export const createEventSchema = z
     subtitle: z.string().min(5, { message: "Subtitle minimal 5 karakter" }),
     category: z.enum(["FESTIVAL", "MUSIC", "ART", "EDUCATION"]),
     location: z.string().min(5, { message: "Lokasi minimal 5 karakter" }),
-    paid: z.boolean(),
-    price: z.number().nonnegative({ message: "Harga tidak boleh negatif" }),
+
+   
+    paid: z.preprocess((val) => val === 'true' || val === true, z.boolean()),
+    price: z.preprocess((val) => Number(val), z.number().nonnegative({ message: "Harga tidak boleh negatif" })),
+    total_seats: z.preprocess((val) => Number(val), z.number().int().min(1, { message: "Total seats minimal 1" })),
+
     start_date: z
       .string()
       .refine((s) => !isNaN(Date.parse(s)), { message: "Format start_date tidak valid" }),
     end_date: z
       .string()
       .refine((s) => !isNaN(Date.parse(s)), { message: "Format end_date tidak valid" }),
-    total_seats: z.number().int().min(1, { message: "Total seats minimal 1" }),
 
+    // Opsional voucher
     voucher_code: z.string().optional(),
     voucher_discount: z
       .preprocess((val) => Number(val), z.number().int().nonnegative())
@@ -39,6 +43,7 @@ export const createEventSchema = z
         path: ["price"],
       });
     }
+
     const start = Date.parse(data.start_date);
     const end = Date.parse(data.end_date);
     if (!isNaN(start) && !isNaN(end) && start >= end) {
